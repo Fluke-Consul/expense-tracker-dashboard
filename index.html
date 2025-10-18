@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multi-Department Expense Tracking System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&family=Noto+Sans+Thai:wght@100..900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f4f8;
+        }
+        .card {
+            background: white;
+            border-radius: 1rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        .table-responsive {
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+
+    <!-- Header Section -->
+    <header class="text-center mb-8">
+        <h1 class="text-3xl font-extrabold text-blue-800">Multi-Department Expense Tracking System</h1>
+        <p class="text-xl text-gray-600 mt-2">Reduce Workload, Increase Speed for Analysis and Reporting</p>
+    </header>
+
+    <!-- 💡 User Guide (For All Departments) -->
+    <div class="card bg-blue-100 border-l-4 border-blue-500">
+        <h2 class="text-2xl font-bold text-blue-700 mb-3">💡 User Guide (For All Departments) - 90% Simpler!</h2>
+        <div class="space-y-2 text-lg text-blue-800">
+            <p><span class="font-bold text-blue-900">Step 1 (Click):</span> Access your dedicated <span class="font-mono bg-blue-200 p-1 rounded">Google Forms Link</span></p>
+            <p><span class="font-bold text-blue-900">Step 2 (Input):</span> Complete the 4 main fields (**Est. Due Date, Department, Summary, Amount**) and press **Submit**</p>
+            <p><span class="font-bold text-blue-900">Step 3 (Done):</span> Data is automatically logged into the central sheet immediately. **No need to open the main Sheet file.**</p>
+        </div>
+    </div>
+    
+    <!-- NEW: Introduction/Protocol -->
+    <div class="card bg-gray-50 border-l-4 border-gray-300">
+        <h3 class="text-xl font-bold text-gray-800 mb-2">Expense Submission Protocol</h3>
+        <p class="text-gray-600">This form is the mandatory channel for submitting all estimated weekly expenditures. Please complete all required fields (indicated by *) accurately and concisely. Your prompt and correct submission is essential for streamlined financial forecasting and executive reporting.</p>
+    </div>
+
+    <!-- 1. Form Input (Google Forms Simulation) -->
+    <div class="card">
+        <h2 class="text-xl font-bold text-gray-700 mb-4">1. Expense Data Submission (Google Forms Simulation)</h2>
+        <form id="expenseForm" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            
+            <label class="block">
+                <span class="text-gray-700">Estimated Due Date *</span>
+                <!-- Note for Q1: The language of the native calendar pop-up is controlled by the user's browser/OS settings, not the website code. All data handling and display (Timestamp, Est. Due Date) use the English locale (en-US) for consistency. -->
+                <input type="date" id="date" required class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm p-2 focus:border-blue-500 focus:ring-blue-500">
+            </label>
+
+            <label class="block">
+                <span class="text-gray-700">Department *</span>
+                <select id="department" required class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm p-2 focus:border-blue-500 focus:ring-blue-500">
+                    <option value="">-- Select Department --</option>
+                    <option value="HR & Admin">HR & Admin</option>
+                    <option value="Kitchen">Kitchen</option>
+                    <option value="FOH (Front of House)">FOH (Front of House)</option>
+                    <option value="Beverage">Beverage</option>
+                    <option value="Marketing">Marketing</option>
+                    <option value="Sales">Sales</option>
+                </select>
+            </label>
+
+            <label class="block">
+                <span class="text-gray-700">Summary Expense Item *</span>
+                <input type="text" id="summary" required class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm p-2 focus:border-blue-500 focus:ring-blue-500">
+            </label>
+
+            <label class="block">
+                <span class="text-gray-700">Estimated Amount (THB) *</span>
+                <input type="number" id="amount" required min="1" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm p-2 focus:border-blue-500 focus:ring-blue-500">
+            </label>
+
+            <label class="block md:col-span-2">
+                <span class="text-gray-700">Note/Remark</span>
+                <textarea id="note" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm p-2 focus:border-blue-500 focus:ring-blue-500" rows="2"></textarea>
+            </label>
+
+            <div class="md:col-span-2 flex justify-center">
+                <button type="submit" id="submitButton" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-xl transition duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 disabled:opacity-50" disabled>
+                    Submit Estimate
+                </button>
+            </div>
+        </form>
+        <p id="message" class="mt-4 text-center hidden text-red-500 font-semibold"></p>
+    </div>
+
+    <!-- 2. Dashboard Section (For Presentation) -->
+    <div class="card">
+        <div class="flex justify-between items-center mb-4 border-b pb-2">
+            <h2 class="text-xl font-bold text-gray-700">2. Dashboard Report & Summary (For Executive Presentation)</h2>
+            <button id="exportButton" class="bg-green-500 hover:bg-green-600 text-white text-sm font-bold py-2 px-4 rounded-lg transition duration-200 shadow-md transform hover:scale-105 disabled:opacity-50" disabled>
+                Export Data to CSV (Excel Backup)
+            </button>
+        </div>
+        
+        <!-- Pivot Table Simulation -->
+        <div class="mb-6">
+            <h3 class="text-lg font-semibold text-purple-700 mb-3 border-b pb-2">Weekly and Departmental Expense Estimate Summary (Pivot Table)</h3>
+            
+            <!-- Gemini Rationale Output Area -->
+            <div id="geminiRationaleOutput" class="card p-4 bg-yellow-50 border-yellow-300 hidden mb-4">
+                <h4 class="text-lg font-bold text-yellow-800 mb-2 flex items-center">
+                    ✨ Executive Insights (Gemini AI)
+                    <span id="geminiLoading" class="ml-3 text-sm text-gray-600 hidden">
+                        Analyzing data...
+                        <svg class="animate-spin h-4 w-4 text-yellow-800 inline ml-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                    </span>
+                </h4>
+                <div id="geminiRationaleContent" class="text-gray-700 space-y-3"></div>
+            </div>
+
+            <div id="pivotTableContainer" class="table-responsive">
+                <!-- Pivot Table will be rendered here -->
+                <p class="text-gray-500">Initializing Database or No data available...</p>
+            </div>
+        </div>
+
+        <!-- Raw Data Simulation -->
+        <div class="mb-6">
+            <h3 class="text-lg font-semibold text-green-700 mb-3 border-b pb-2">Raw Data Repository - Real-Time Data Flow</h3>
+            <div id="rawDataContainer" class="table-responsive">
+                <!-- Raw Data Table will be rendered here -->
+                <p class="text-gray-500">Initializing Database or No data in the system...</p>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, addDoc, onSnapshot, collection, query } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // setLogLevel('Debug'); // Uncomment for debugging Firestore
+
+        let db, auth, userId;
+        let expenses = [];
+        let isAuthReady = false;
+
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
+        const apiKey = ""; // API key for Gemini
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        db = getFirestore(app);
+        auth = getAuth(app);
+
+        const submitButton = document.getElementById('submitButton');
+        const exportButton = document.getElementById('exportButton');
+        const messageEl = document.getElementById('message');
+        const geminiRationaleOutput = document.getElementById('geminiRationaleOutput');
+        const geminiRationaleContent = document.getElementById('geminiRationaleContent');
+        const geminiLoading = document.getElementById('geminiLoading');
+
+
+        function updateUIState(loading) {
+            submitButton.disabled = loading || !isAuthReady;
+            exportButton.disabled = loading || expenses.length === 0;
+            submitButton.textContent = loading ? 'Submitting...' : 'Submit Estimate';
+        }
+
+        function getCollectionRef() {
+            // Path: /artifacts/{appId}/users/{userId}/expense_estimates
+            return collection(db, 'artifacts', appId, 'users', userId, 'expense_estimates');
+        }
+
+        function setupDataListener() {
+            if (!db || !userId) return;
+
+            const q = query(getCollectionRef());
+            
+            onSnapshot(q, (snapshot) => {
+                expenses = snapshot.docs.map(doc => {
+                    const data = doc.data();
+                    // Convert Firestore Timestamp object back to JavaScript Date object
+                    return {
+                        ...data,
+                        timestamp: data.timestamp ? data.timestamp.toDate() : new Date(),
+                        id: doc.id
+                    };
+                });
+                console.log(`Data loaded from Firestore: ${expenses.length} records.`);
+                updateUIState(false);
+                renderAll();
+            }, (error) => {
+                console.error("Firestore Listener Error:", error);
+                messageEl.textContent = 'ERROR: Failed to load data from Firestore.';
+                messageEl.classList.remove('hidden');
+                updateUIState(false);
+            });
+        }
+
+        async function setupAuthAndListener() {
+            updateUIState(true);
+            try {
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+            } catch (error) {
+                console.error("Firebase Auth Error:", error);
+                messageEl.textContent = `Authentication Failed: ${error.message}`;
+                messageEl.classList.remove('hidden');
+                updateUIState(false);
+            }
+
+            onAuthStateChanged(auth, (user) => {
+                if (user) {
+                    userId = user.uid;
+                    isAuthReady = true;
+                    setupDataListener();
+                } else {
+                    // Fallback to anonymous sign-in if not already
+                    if (!auth.currentUser) signInAnonymously(auth).catch(e => console.error("Anon sign-in failed:", e));
+                }
+            });
+        }
+        
+        // Utility for exponential backoff during API calls
+        async function backoffFetch(url, options, maxRetries = 5) {
+            for (let i = 0; i < maxRetries; i++) {
+                try {
+                    const response = await fetch(url, options);
+                    if (response.status !== 429) {
+                        return response;
+                    }
+                    // Too many requests (429) - wait and retry
+                    const delay = Math.pow(2, i) * 1000 + Math.random() * 1000;
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                } catch (error) {
+                    if (i === maxRetries - 1) throw error;
+                    // Other error - wait and retry
+                    const delay = Math.pow(2, i) * 1000 + Math.random() * 1000;
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                }
+            }
+            throw new Error('Max retries exceeded');
+        }
+
+        // --- Gemini AI Feature ---
+        
+        async function generateRationale(weekNo, weekData, weekTotal, wowIndicator) {
+            geminiRationaleOutput.classList.remove('hidden');
+            geminiLoading.classList.remove('hidden');
+            geminiRationaleContent.innerHTML = 'Generating insights...';
+
+            const formattedData = Object.entries(weekData.departments)
+                .map(([dept, amount]) => `${dept}: ${formatCurrency(amount)}`)
+                .join('; ');
+            
+            const systemPrompt = "Act as a senior financial analyst for a hospitality business, specializing in expense forecasting. Your task is to analyze the provided weekly expense estimates and provide a concise, high-level summary for the executive team. The output must be in professional English.";
+
+            const userQuery = `Analyze the following aggregated expense estimates for Week ${weekNo}, which totals ${formatCurrency(weekTotal)} (WoW Change: ${wowIndicator}).\n\nDepartmental Breakdown:\n${formattedData}\n\nBased on this, please provide a response containing two distinct sections (separated by a blank line): 1) Executive Rationale: A 2-3 sentence formal summary explaining the key drivers (the major spending departments) and the WoW trend. 2) Action Points: Two proactive, actionable suggestions for management to consider for this week's spending. Ensure the output is formatted as clean, continuous text without markdown headers, bullet points, or numbering.`;
+
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+
+            const payload = {
+                contents: [{ parts: [{ text: userQuery }] }],
+                systemInstruction: {
+                    parts: [{ text: systemPrompt }]
+                }
+            };
+            
+            try {
+                const response = await backoffFetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    throw new Error(`API call failed with status: ${response.status}`);
+                }
+
+                const result = await response.json();
+                const text = result.candidates?.[0]?.content?.parts?.[0]?.text || "Error: Could not retrieve analysis.";
+
+                const [rationale, actions] = text.split('\n\n').filter(Boolean);
+                
+                geminiRationaleContent.innerHTML = `
+                    <p class="font-semibold text-yellow-900 border-b pb-1">Executive Rationale:</p>
+                    <p>${rationale || 'N/A'}</p>
+                    <p class="font-semibold text-yellow-900 border-b pb-1 mt-3">Action Points:</p>
+                    <ul class="list-disc list-inside space-y-1">
+                        ${actions ? actions.split('\n').map(a => `<li>${a.trim()}</li>`).join('') : '<li>N/A</li>'}
+                    </ul>
+                `;
+
+            } catch (error) {
+                console.error("Gemini Error:", error);
+                geminiRationaleContent.innerHTML = `<p class="text-red-600">Failed to generate insights. API Error: ${error.message}</p>`;
+            } finally {
+                geminiLoading.classList.add('hidden');
+            }
+        }
+
+        // --- Core Data Logic ---
+
+        // Function to calculate ISO 8601 Week Number (YYYY-WW)
+        function getIsoWeekNumber(d) {
+            d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+            d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
+            const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+            const weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+            const year = d.getUTCFullYear();
+            return `${year}-${(weekNo < 10 ? '0' : '')}${weekNo}`;
+        }
+
+        // Format number as Thai Baht currency
+        function formatCurrency(number) {
+            return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'THB', minimumFractionDigits: 0 }).format(number);
+        }
+
+        // --- Export Functions (Backup Plan) ---
+
+        function convertToCSV(data) {
+            const headers = ["Timestamp", "Est. Week No.", "Est. Due Date", "Department", "Summary Expense", "Estimated Amount (THB)", "Note/Remark"];
+            const csvRows = [];
+            csvRows.push(headers.join(','));
+
+            for (const item of data) {
+                // Use explicit options for date/time formatting for CSV clarity
+                const dateFormatted = new Date(item.date + 'T00:00:00').toLocaleDateString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit' });
+                const timestampFormatted = item.timestamp.toISOString();
+                
+                // Escape quotes and ensure clean CSV
+                const row = [
+                    `"${timestampFormatted}"`,
+                    `"${item.weekNo}"`,
+                    `"${dateFormatted}"`,
+                    `"${item.department}"`,
+                    `"${item.summary.replace(/"/g, '""')}"`,
+                    item.amount,
+                    `"${item.note.replace(/"/g, '""')}"`
+                ];
+                csvRows.push(row.join(','));
+            }
+
+            return csvRows.join('\n');
+        }
+
+        document.getElementById('exportButton').addEventListener('click', () => {
+            const filename = 'Expense_Estimates_Backup_' + new Date().toISOString().slice(0, 10) + '.csv';
+            const csvData = convertToCSV(expenses);
+            const blob = new Blob([csvData], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            
+            // Trigger download
+            const url = URL.createObjectURL(blob);
+            link.setAttribute("href", url);
+            link.setAttribute("download", filename);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            messageEl.textContent = '✅ Data exported successfully to ' + filename;
+            messageEl.classList.remove('hidden');
+            messageEl.classList.remove('text-red-500');
+            messageEl.classList.add('text-green-600');
+            setTimeout(() => messageEl.classList.add('hidden'), 5000);
+        });
+
+        // --- Render Functions ---
+
+        function renderRawData() {
+            const container = document.getElementById('rawDataContainer');
+            if (expenses.length === 0) {
+                container.innerHTML = '<p class="text-gray-500">No data in the system...</p>';
+                return;
+            }
+
+            let html = `
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Timestamp</th>
+                            <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Est. Week No.</th>
+                            <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Est. Due Date</th>
+                            <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Department</th>
+                            <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Summary</th>
+                            <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Amount (THB)</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+            `;
+
+            expenses.sort((a, b) => new Date(a.date) - new Date(b.date)); // Sort by due date
+
+            expenses.forEach(item => {
+                // Formatting date and time for display in US format (e.g., Oct 18, 2025)
+                const ts = item.timestamp.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) + ' ' + item.timestamp.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                const dueDate = new Date(item.date + 'T00:00:00').toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+                
+                html += `
+                    <tr>
+                        <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-500">${ts}</td>
+                        <td class="px-3 py-2 whitespace-nowrap text-sm font-semibold text-purple-600">${item.weekNo}</td>
+                        <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-900">${dueDate}</td>
+                        <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-900">${item.department}</td>
+                        <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-900">${item.summary}</td>
+                        <td class="px-3 py-2 whitespace-nowrap text-sm font-medium text-right text-red-600">${formatCurrency(item.amount)}</td>
+                    </tr>
+                `;
+            });
+
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        }
+
+        function renderPivotTable() {
+            const container = document.getElementById('pivotTableContainer');
+            if (expenses.length === 0) {
+                container.innerHTML = '<p class="text-gray-500">No data available for summary...</p>';
+                return;
+            }
+            
+            geminiRationaleOutput.classList.add('hidden'); // Hide rationale output on new render
+
+            // 1. Grouping and Aggregation (Pivot Logic: Week -> Department -> Sum)
+            const pivotData = expenses.reduce((acc, item) => {
+                const key = item.weekNo;
+                if (!acc[key]) {
+                    acc[key] = { total: 0, departments: {}, rawDetails: [] };
+                }
+                
+                const deptKey = item.department;
+                if (!acc[key].departments[deptKey]) {
+                    acc[key].departments[deptKey] = 0;
+                }
+                
+                acc[key].departments[deptKey] += item.amount;
+                acc[key].total += item.amount;
+                acc[key].rawDetails.push(item);
+                return acc;
+            }, {});
+
+            const sortedWeeks = Object.keys(pivotData).sort();
+            let totalGrandTotal = 0;
+            let previousWeekTotal = 0; // Tracking variable for WoW
+
+            // 2. Rendering the Pivot Table
+            let html = `
+                <table class="min-w-full divide-y divide-gray-300">
+                    <thead class="bg-purple-100">
+                        <tr>
+                            <th class="px-4 py-3 text-left text-sm font-bold text-purple-800 uppercase tracking-wider">Week (Year-Week)</th>
+                            <th class="px-4 py-3 text-left text-sm font-bold text-purple-800 uppercase tracking-wider">Department</th>
+                            <th class="px-4 py-3 text-right text-sm font-bold text-purple-800 uppercase tracking-wider">Estimated Expense (THB)</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+            `;
+
+            sortedWeeks.forEach((weekNo, index) => {
+                const weekData = pivotData[weekNo];
+                const deptKeys = Object.keys(weekData.departments).sort();
+                totalGrandTotal += weekData.total;
+
+                // --- WoW Calculation ---
+                let wowChangeAbs = 0;
+                let wowChangePct = 0;
+                let wowIndicator = '';
+
+                if (index > 0) {
+                    wowChangeAbs = weekData.total - previousWeekTotal;
+                    if (previousWeekTotal > 0) {
+                        wowChangePct = (wowChangeAbs / previousWeekTotal) * 100;
+                    }
+
+                    if (wowChangeAbs > 0) {
+                        wowIndicator = `(+${formatCurrency(wowChangeAbs)} / +${wowChangePct.toFixed(1)}%)`;
+                    } else if (wowChangeAbs < 0) {
+                        wowIndicator = `(${formatCurrency(wowChangeAbs)} / ${wowChangePct.toFixed(1)}%)`;
+                    } else {
+                         wowIndicator = `(No Change)`;
+                    }
+                } else {
+                    wowIndicator = '(Baseline - First Week)';
+                }
+                // -----------------------
+
+                // Detail Rows (Department)
+                deptKeys.forEach(dept => {
+                    html += `
+                        <tr>
+                            <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-600">${weekNo}</td>
+                            <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900">${dept}</td>
+                            <td class="px-4 py-2 whitespace-nowrap text-sm text-right">${formatCurrency(weekData.departments[dept])}</td>
+                        </tr>
+                    `;
+                });
+                
+                // Prepare data string for Gemini button
+                const geminiData = JSON.stringify({
+                    weekNo: weekNo,
+                    weekData: weekData,
+                    wowIndicator: wowIndicator,
+                    weekTotal: weekData.total
+                }).replace(/"/g, '&quot;');
+                
+                const buttonHtml = `<button 
+                                        class="text-xs bg-yellow-400 hover:bg-yellow-500 text-gray-800 font-bold py-1 px-2 rounded-lg ml-2 transition duration-150 transform hover:scale-105"
+                                        onclick='window.generateRationaleFromClick(&quot;${weekNo}&quot;)'
+                                        data-week-data='${geminiData}'>
+                                        ✨ Generate Rationale
+                                    </button>`;
+
+                // Subtotal Row (Week Total + WoW)
+                html += `
+                    <tr class="bg-purple-50">
+                        <td class="px-4 py-2 whitespace-nowrap text-sm font-bold text-purple-700 flex items-center" colspan="2">
+                            Total Week ${weekNo}
+                            ${buttonHtml}
+                        </td>
+                        <td class="px-4 py-2 whitespace-nowrap text-sm font-bold text-right text-purple-700 border-t-2 border-purple-300">
+                            ${formatCurrency(weekData.total)}
+                            <span class="${wowChangeAbs > 0 ? 'text-red-600' : (wowChangeAbs < 0 ? 'text-green-600' : 'text-gray-500')} text-xs font-normal block pt-1">
+                                WoW Change: ${wowIndicator}
+                            </span>
+                        </td>
+                    </tr>
+                `;
+                
+                // Update previous week total for the next iteration
+                previousWeekTotal = weekData.total;
+            });
+            
+            // Grand Total Row
+            html += `
+                <tr class="bg-blue-200">
+                    <td class="px-4 py-2 whitespace-nowrap text-lg font-extrabold text-blue-800" colspan="2">Grand Total</td>
+                    <td class="px-4 py-2 whitespace-nowrap text-lg font-extrabold text-right text-blue-800 border-t-4 border-blue-600">${formatCurrency(totalGrandTotal)}</td>
+                </tr>
+            `;
+
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        }
+
+        // Global function to be called from the button click
+        window.generateRationaleFromClick = (weekNo) => {
+            const button = document.querySelector(`[data-week-data*="${weekNo}"]`);
+            if (button) {
+                const data = JSON.parse(button.getAttribute('data-week-data'));
+                generateRationale(data.weekNo, data.weekData, data.weekTotal, data.wowIndicator);
+            }
+        };
+
+        // --- Event Handlers (Using Firestore) ---
+
+        document.getElementById('expenseForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            updateUIState(true);
+            
+            const dateInput = document.getElementById('date').value;
+            const amountInput = parseFloat(document.getElementById('amount').value);
+            
+            const newExpense = {
+                timestamp: new Date(),
+                date: dateInput,
+                department: document.getElementById('department').value,
+                summary: document.getElementById('summary').value,
+                amount: amountInput,
+                note: document.getElementById('note').value,
+                weekNo: getIsoWeekNumber(new Date(dateInput + 'T00:00:00'))
+            };
+
+            const expenseToSave = {
+                timestamp: newExpense.timestamp, 
+                date: newExpense.date,
+                department: newExpense.department,
+                summary: newExpense.summary,
+                amount: newExpense.amount,
+                note: newExpense.note,
+                weekNo: newExpense.weekNo
+            };
+
+            try {
+                await addDoc(getCollectionRef(), expenseToSave);
+                
+                // Clear form fields
+                document.getElementById('date').value = '';
+                document.getElementById('summary').value = '';
+                document.getElementById('amount').value = '';
+                document.getElementById('note').value = '';
+
+                messageEl.textContent = '✅ Expense data successfully recorded! Data sent to central repository.';
+                messageEl.classList.remove('hidden', 'text-red-500');
+                messageEl.classList.add('text-green-600');
+                setTimeout(() => messageEl.classList.add('hidden'), 3000);
+            } catch (e) {
+                console.error("Error adding document: ", e);
+                messageEl.textContent = 'ERROR: Submission failed. Check console for details.';
+                messageEl.classList.remove('hidden', 'text-green-600');
+                messageEl.classList.add('text-red-500');
+            } finally {
+                updateUIState(false);
+            }
+        });
+
+        function renderAll() {
+            renderRawData();
+            renderPivotTable();
+        }
+
+        // Initial setup
+        window.onload = setupAuthAndListener;
+    </script>
+
+</body>
+</html>
